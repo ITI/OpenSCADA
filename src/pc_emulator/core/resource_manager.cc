@@ -172,6 +172,7 @@ void ResourceManager::ExecuteResourceManager() {
             __AssociatedResource->FromResourceManager.push(std::to_string(
                             curr_time + nxt_round_inc));
             auto recv = __AssociatedResource->ToResourceManager.pop();
+	    
 
             if (recv == "WAIT_FOR_IO") {
                 curr_time = __AssociatedResource->clock->__time;

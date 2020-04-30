@@ -53,7 +53,7 @@ DataTypes are primarily two categories: Elementary and Non-Elementary. Each cate
 		* VAR_INPUT: The field is treated as an input variable. Its value can only be read within the called POU and can only be set from the calling POU
     		* VAR_OUTPUT: The field is treated as an output variable. Its value can only be set within the called POU and it can only be read from the calling POU
     		* VAR_IN_OUT: The field is treated as both input/output variable. During the time of POU invocation, another variable from calling POU's scope is assigned to this field. It could be modified within the called POU and these modifications reflect changes in the calling POU as well.
-    		* VAR = 3: The field is internal to the POU and equivalent to a local variable. But unlike local variable in the traditional sense, its value is retained across invocations if the PoUType is a PROGRAM or FB. It cannot be used in a FN.
+    		* VAR: The field is internal to the POU and equivalent to a local variable. But unlike local variable in the traditional sense, its value is retained across invocations if the PoUType is a PROGRAM or FB. It cannot be used in a FN.
     		* VAR_TEMP: The field is internal to the POU and equivalent to a local variable.
     		* VAR_EXTERNAL: The field is equivalent to an extern variable. It cannot be accessed/assigned during POU invocation. It points to global variables declared at the resource/PLC level. The field name and field datatype names must match these previously declared global variables. The field can be accessed for read/write operations within the called POU.
 		* VAR_EXPLICIT_STORAGE: The field is backed by an address in memory (RAM or IO). It is equivalent to a directly represented variable in IL terminology. These variables cannot be accessed/assigned during POU invocation but any changes to the associated memory location is reflected in the affected logic. 
@@ -194,7 +194,7 @@ Program Organization Units are special categories of DataTypes which include pro
 
 Functions are stateless i.e every invocation of an Function with the same input produces the same output. Functions cannot have fields with interface type VAR. Function Blocks and Programs are stateful operations. Each FB, PROGRAM is like a class and variables of their type are like objects of the class. Invocations of a variable of type FB or PROGRAM can store state which may be used by the logic during its next invocation.
 
-Here, we illustrate how POUs can be written and how then can invoke other POUs to perform various tasks. We used the PID control example given `here <https://github.com/Vignesh2208/OpenSCADA/tree/master/examples/inverted_pendulum/CPU_001.proto/txt>`_. The first POU we look at is a Function Block called DivideFB which takes a Dividend, Divisor as inputs and returns a Quotient and Reminder. It also sets an error flag if the divisor is 0::
+Here, we illustrate how POUs can be written and how then can invoke other POUs to perform various tasks. We used the PID control example given `here <https://github.com/Vignesh2208/OpenSCADA/tree/master/examples/inverted_pendulum/CPU_001.prototxt>`_. The first POU we look at is a Function Block called DivideFB which takes a Dividend, Divisor as inputs and returns a Quotient and Reminder. It also sets an error flag if the divisor is 0::
 
 	pou_var {
 	    name: "DivideFB"
@@ -328,7 +328,7 @@ In the next step, we look at one other FB and a PROGRAM which invokes both. The 
 	    }
 	}
 
-In the calling interface of the PID_CONTROL program, notice two fields "div" and "get_control" whose datatypes are the two previously defined Function Blocks. This is an example of an instantiation of a POU in IL. The fields "div" and "get_control" are objects of type "DivideFB" and "GetControlInputFB" respectively. These objects can be invoked/called within the POU to execute their embedded logic. Also notice, two other fields "current_theta" and "force" which are declared as VAR_EXTERNAL. These are global variables which are defined at the resource level in the resource specification `file <https://github.com/Vignesh2208/OpenSCADA/tree/master/examples/inverted_pendulum/CPU_001.proto/txt>`_::
+In the calling interface of the PID_CONTROL program, notice two fields "div" and "get_control" whose datatypes are the two previously defined Function Blocks. This is an example of an instantiation of a POU in IL. The fields "div" and "get_control" are objects of type "DivideFB" and "GetControlInputFB" respectively. These objects can be invoked/called within the POU to execute their embedded logic. Also notice, two other fields "current_theta" and "force" which are declared as VAR_EXTERNAL. These are global variables which are defined at the resource level in the resource specification `file <https://github.com/Vignesh2208/OpenSCADA/tree/master/examples/inverted_pendulum/CPU_001.prototxt>`_::
 
 	pou_var {
 	    name: "PID_CONTROL"
@@ -552,3 +552,60 @@ OpenSCADA ships with following System Function Blocks (SFBs). For further detail
 
 Tasks
 ^^^^^
+
+POUs merely contain the calling interface and the logic to be executed upon invocation. Tasks specify conditions underwhich a POU is invoked. There are type types of tasks:
+
+* **Interval Tasks**: Interval Tasks are executed periodically at a specified period. In OpenSCADA, each CPU can have atmost one associated interval task. Interval tasks are specified using the **interval_task** field in Resource Specification. The following example defines an interval_task called CYCLIC_TASK which has a period of 10ms::
+
+          interval_task {
+                task_name: "CYCLIC_TASK"
+                priority: 1
+                interval_task_params {
+                        interval_ms: 10
+                }
+          }
+
+
+* **Interrupt Tasks**: Interrupt Tasks are configured with a boolean trigger variable which could be a PLC level global variable or a resource level global variable. Interrupt tasks are invoked when the trigger variable goes from FALSE to TRUE i.e during a positive transition. In OpenSCADA, each CPU can have multiple associated interrupt tasks and interrupt tasks always have a higher priority over interval tasks and can pre-empt any currently running interval task. If multiple interrupt tasks become simultaneously active, they are executed in the order of their priority. The trigger condition is checked after each instruction execution. The following example defines an interrupt_task called INTERRUPT_TASK which is triggered by "global_bool_var" (which is global variable) defined in System Specification::
+
+          interrupt_task {
+                task_name: "INTERRUPT_TASK"
+                priority: 1
+                interrupt_task_params {
+                        trigger_variable_field: "global_bool_var"
+                }
+          }
+
+
+Attaching POUs to Tasks
+-----------------------
+
+Task definition by itself does not specify which POUs are attached to a task. In OpenSCADA, POUs of type FBs and PROGRAMS can be attached to Tasks using the **programs** field of the Resource Specification. It is a message of type ProgramSpecification described in `configuration.proto <https://github.com/Vignesh2208/OpenSCADA/tree/master/src/pc_emulator/proto/configuration.proto/>`_. Each programs field defines a mapping between a POU of interest and a task of interest. Multiple POUs can be attached to the same task. A separate programs field is used for each attachement. In this example the POU "PID_CONTROL" is attached with the task "CYCLIC_TASK". Thus the program "PID_CONTROL" gets invoked every 10ms.::
+
+	programs {
+	    program_name: "PID_CONTROL"
+	    pou_variable_type: "PID_CONTROL"
+	    task_name: "CYCLIC_TASK"
+	    initialization_maps {
+		pou_variable_field_name: "dummy_in"
+		mapped_variable_field_name: "start_int"
+	    }
+	    initialization_maps {
+		pou_variable_field_name: "dummy_out"
+		mapped_variable_field_name: "global_int_var"
+	    }
+	}
+
+
+Arguments to each invocation of the POU can be passed through initialization_maps (a subfield of the ProgramSpecification message). Initialization maps can be used to initialize the POUs input/inout variables as well as specify where output variables could be stored after the invocation. In this example, the program "PID_CONTROL"'s input variable "dummy_in" at the start of every invocation is assigned the value of the global variable "start_int" (which was specified in the System specification i.e, in the previous section). At the end of the invocation, the value of the output variable of the PROGRAM called "dummy_out" is copied to "global_int_var" (which was created in the previous section as a PLC level global variable). It must be noted that the mapped_variable_field_name for an VAR_INPUT variable could also be an immediate value. For instance in the above example, if "dummy_in" needs to be initialized with 10 for every invocation, the initialization map could be modified to::
+
+	    initialization_maps {
+		pou_variable_field_name: "dummy_in"
+		mapped_variable_field_name: "10"
+	    }
+
+
+
+
+
+

@@ -4,6 +4,7 @@ SCADA_on_CORE.code-workspace
 .vscode/tasks.json
 .vscode/launch.json
 .vscode
+*.pyc
 bazel-bin
 bazel-OpenSCADA
 bazel-out

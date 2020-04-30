@@ -78,7 +78,9 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = "haiku"
+html_theme_options = {
+}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -183,3 +185,9 @@ epub_exclude_files = ['search.html']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
+import subprocess
+subprocess.call('cd .. ; doxygen', shell=True)
+subprocess.call('mv html/index.html html/index_doxy.html', shell=True)
+html_extra_path = ['../docs/html']

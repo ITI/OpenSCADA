@@ -2,7 +2,7 @@ User Guide
 ==========
 
 .. toctree::
-   :maxdepth: 12
+   :maxdepth: 13
 
    prerequisites
    project_configuration
@@ -11,18 +11,8 @@ User Guide
    il_programming
    running_plc
    plc_io
-   building_sensors
-   building_actuators
    plc_communication
    building_physical_simulations
    co_simulation
+   quickstart
 
-   :caption: User Guide:
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

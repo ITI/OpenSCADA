@@ -49,7 +49,7 @@ class EmulationDriver(object):
         self.timestep_per_round_secs =\
              (float(n_insns_per_round)/rel_cpu_speed)/1000000000.0
         self.total_time_elapsed = 0.0
-        assert number_nodes > 0 
+        assert number_dilated_nodes > 0 
         if self.is_virtual == True:
             print "Initializing Kronos ..."
             if kf.initializeExp(1) < 0 :
@@ -97,7 +97,13 @@ class EmulationDriver(object):
 
         self.total_time_elapsed += float(time_step_secs)
         if self.physical_system_sim_driver is not None:
+            start_time = float(time.time())
             self.physical_system_sim_driver.progress(float(time_step_secs))
+            end_time = float(time.time())
+            if not self.is_virtual:
+                left_over = time_step_secs - (end_time - start_time)
+                if left_over > 0:
+                    time.sleep(left_over)
 
     def run_for(self, run_time):
         """Run the co/simulation-emulation for specified duration.

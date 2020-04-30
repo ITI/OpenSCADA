@@ -1,3 +1,5 @@
+#include <sys/types.h>
+
 #include "src/pc_emulator/include/kronos_api.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
@@ -31,12 +33,10 @@ int GetNxtCommand(string& result) {
         return 1;
     }
 
-    //std::cout << "Kronos returned: " << result << std::endl;
     boost::trim_if(result, boost::is_any_of("\t .[]"));
     boost::split(NestedFields, result,
                 boost::is_any_of(",|"), boost::token_compress_on);
-    //assert(NestedFields.size() == 2);
-    //result = NestedFields[1];
-    result = "10000";
+    assert(NestedFields.size() == 3);
+    result = NestedFields[2];
     return 1;
 }

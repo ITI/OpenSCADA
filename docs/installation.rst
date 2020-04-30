@@ -1,33 +1,40 @@
 Installation
 ============
 
-To setup OpenSCADA, grpc and bazel package manager need to be first installed. To install them follow the steps given below:
+To setup OpenSCADA, Kronos, grpc and bazel package manager need to be first installed. 
 
-Installing GRPC
-^^^^^^^^^^^^^^^
+Installing Kronos
+^^^^^^^^^^^^^^^^^
+
+To install Kronos, follow steps included in the `documentation <https://kronoz.readthedocs.io/en/latest/index.html>`_. To install all the other dependencies, follow the steps given below.
+
+Installing Dependencies
+^^^^^^^^^^^^^^^^^^^^^^^
 * Install pip::
 
-	sudo apt-get install python3-pip
+	sudo apt-get install python-pip
+        pip install --upgrade pip
 
-* To install grpc for python execute the following commands::
+* To install grpc and other dependencies for python execute the following commands::
 
-	pip3 instatll grpcio grpcio-tools
+	sudo apt-get install python-tk
+	sudo python -m pip install grpcio grpcio-tools numpy opencv-python matplotlib
 
 Installing Bazel
 ^^^^^^^^^^^^^^^^
 
-* Install OpenJdk::
+* Install OpenJDK::
 
 	sudo apt-get install openjdk-8-jdk
 
-* Install Bazel::
+* Install Bazel 0.23.1::
 
-	echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-	curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-	sudo apt-get update && sudo apt-get install bazel
-	sudo apt-get install --only-upgrade bazel
+	wget https://github.com/bazelbuild/bazel/releases/download/0.23.1/bazel-0.23.1-installer-linux-x86_64.sh
+	chmod +x bazel-0.23.1-installer-linux-x86_64.sh
+	./bazel-0.23.1-installer-linux-x86_64.sh
+	
 
-Make sure the version of bazel is atleast 0.21.0 or greater (run command: bazel version)
+Make sure the version of bazel is atleast 0.23.1 (run command: bazel version)
 
 Installing OpenSCADA
 ^^^^^^^^^^^^^^^^^^^^
@@ -40,10 +47,23 @@ Installing OpenSCADA
 
 	sudo ./setup.sh install
 
+* Update environment variables. Add OSCADA_INSTALLATION and update PYTHONPATH in bashrc::
+
+	export OSCADA_INSTALLATION=<path to installation directory>
+	export PYTHONPATH="${PYTHONPATH}:${OSCADA_INSTALLATION}"
+	
+Ready to use VM
+^^^^^^^^^^^^^^^
+
+A link to use VM containing OpenSCADA and Kronos will be provided upon request. Please contact projectmoses@illinois.edu.
+
+
 Uninstalling OpenSCADA
 ^^^^^^^^^^^^^^^^^^^^^^
 
 * To uninstall/cleanup run the following command::
 
 	sudo ./setup.sh uninstall
+
+ 
 	

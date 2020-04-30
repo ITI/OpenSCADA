@@ -123,6 +123,7 @@ int main(int argc, char **argv) {
     }
     string plc_filename = input.getCmdOption("-f");
 
+    std::cout << "Initializing Comm Module ..." << std::endl;
     comm_module = new CommModule(plc_filename);
 
     ctx = modbus_new_tcp(ip_address.c_str(), port_no);
@@ -147,6 +148,7 @@ int main(int argc, char **argv) {
     while (1) {
         std::cout << "ModBUS waiting for new connection (Press Ctrl-C to quit)..." 
                 << std::endl;
+        fflush(stdout);
         s = modbus_tcp_listen(ctx, 1);
         modbus_tcp_accept(ctx, &s);
         memset(&query, 0, MODBUS_TCP_MAX_ADU_LENGTH);
@@ -154,6 +156,8 @@ int main(int argc, char **argv) {
         modbus_set_debug(ctx, TRUE);
         for (;;) {
             do {
+		std::cout << "ModBUS waiting for new packet ..." 
+                << std::endl;
                 rc = modbus_receive(ctx, query);
             } while (rc == 0);
 
@@ -161,6 +165,8 @@ int main(int argc, char **argv) {
                 break;
             }
 
+	    std::cout << "ModBUS sending response ..." 
+                << std::endl;
             rc = modbus_reply(ctx, query, rc, &mb_mapping);
             if (rc == -1) {
                 break;
