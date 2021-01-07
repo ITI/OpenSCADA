@@ -7,9 +7,14 @@ if [ "$1" == "install" ]; then
     echo "Building Emulator library ..."
     bazel build :pc_emulator_lib
 
+    echo "Building Python Proto libs ..."
+    bazel build :py_access_service_proto
+
     echo "Building LibModbus extensions ..."
     cd contrib/libmodbus && ./autogen.sh && ./configure && make install
     cd ../../
+    
+    sudo ldconfig
 
     echo "Building GRPC extensions ..."
     bazel build :grpc_ext_lib
@@ -28,8 +33,10 @@ if [ "$1" == "install" ]; then
 
     echo "Building Example HMI ..."
     bazel build :example_hmi
-    bazel build :example_hmi_2conns
     sudo cp bazel-bin/example_hmi /usr/bin
+
+    sudo cp bazel-genfiles/py_access_service_proto_pb/src/pc_emulator/proto/*.py src/pc_emulator/proto
+    sudo chmod 777 src/pc_emulator/proto/*.py 
 
     echo "Build and Install finished ..."
 else
@@ -40,7 +47,7 @@ else
         rm /usr/bin/modbus_comm_module || true
         rm /usr/bin/plc_runner || true
         rm /usr/bin/example_hmi || true
-
+	rm src/pc_emulator/proto/*.py
         cd contrib/libmodbus && make uninstall
         cd ../../ 
         echo "Cleanup finished ..."
